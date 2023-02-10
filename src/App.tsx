@@ -1,34 +1,44 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import './App.css'
+import { Dispatch, createContext, useContext, useReducer } from 'react';
+import { ActionI, reducer } from './reducer';
+import './App.css';
 
-function App() {
-  const [count, setCount] = useState(0)
-
-  return (
-    <div className="App">
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </div>
-  )
+export interface AppStateI {
+	count: number;
+}
+interface ContextProps {
+	state: AppStateI;
+	dispatch: Dispatch<ActionI>;
 }
 
-export default App
+const MyContext = createContext<ContextProps | null>(null);
+
+export const useCustomContext = (): ContextProps => {
+	const contextValue = useContext(MyContext);
+	if (contextValue === null) {
+		throw Error('Context has not been Provided!');
+	}
+	return contextValue;
+};
+
+function App() {
+	const [state, dispatch] = useReducer(reducer, { count: 0 });
+
+	return (
+		<MyContext.Provider value={{ state, dispatch }}>
+			<Counter />
+		</MyContext.Provider>
+	);
+}
+
+export function Counter() {
+	const { state, dispatch } = useCustomContext();
+	return (
+		<>
+			Count: {state.count}
+			<button onClick={() => dispatch({ type: 'INCREMENT' })}>+</button>
+			<button onClick={() => dispatch({ type: 'DECREMENT' })}>-</button>
+		</>
+	);
+}
+
+export default App;
